@@ -1,21 +1,37 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from pydantic import BaseModel, Field
+from datetime import datetime
+
+
+class CostEntry(BaseModel):
+    cost: float = Field(ge=0)
+    date: datetime = Field(default_factory=datetime.now)
+    vendor: Optional[str] = None
+    notes: Optional[str] = None
 
 
 class IngredientBase(BaseModel):
     name: str
     weight: float = Field(gt=0)
     nutrition_facts: Dict[str, float]
-    cost: float = Field(ge=0)
-
+    
 
 class IngredientCreate(IngredientBase):
-    pass
-
+    cost: float = Field(ge=0)  # For backward compatibility
+    cost_entries: Optional[List[CostEntry]] = None
+    
 
 class Ingredient(IngredientBase):
     id: int
     recipe_id: Optional[int] = None
+    cost_entries: List[CostEntry] = []
+    
+    @property
+    def cost(self) -> float:
+        """Return the most recent cost entry's value, or 0 if none exist"""
+        if not self.cost_entries:
+            return 0.0
+        return sorted(self.cost_entries, key=lambda x: x.date, reverse=True)[0].cost
 
     model_config = {
         "from_attributes": True,

@@ -1,5 +1,6 @@
 from typing import List, Dict
 from fastapi import APIRouter, HTTPException, status
+from datetime import datetime
 
 from schemas import RecipeCreate, Recipe as RecipeSchema, Ingredient as IngredientSchema
 
@@ -25,12 +26,30 @@ def create_recipe(recipe: RecipeCreate):
     # Add ingredients if provided
     if recipe.ingredients:
         for i, ingredient_data in enumerate(recipe.ingredients):
+            # Create cost entries from the ingredient cost
+            cost_entries = [{
+                "cost": ingredient_data.cost,
+                "date": datetime.now(),
+                "vendor": None,
+                "notes": "Initial cost"
+            }]
+            
+            # Add any additional cost entries if provided
+            if hasattr(ingredient_data, 'cost_entries') and ingredient_data.cost_entries:
+                for entry in ingredient_data.cost_entries:
+                    cost_entries.append({
+                        "cost": entry.cost,
+                        "date": entry.date,
+                        "vendor": entry.vendor,
+                        "notes": entry.notes
+                    })
+            
             db_ingredient = {
                 "id": i + 1,
                 "name": ingredient_data.name,
                 "weight": ingredient_data.weight,
                 "nutrition_facts": ingredient_data.nutrition_facts,
-                "cost": ingredient_data.cost,
+                "cost_entries": cost_entries,
                 "recipe_id": recipe_counter
             }
             db_recipe["ingredients"].append(db_ingredient)
@@ -69,12 +88,30 @@ def update_recipe(recipe_id: int, recipe: RecipeCreate):
     
     # Add new ingredients
     for i, ingredient_data in enumerate(recipe.ingredients):
+        # Create cost entries from the ingredient cost
+        cost_entries = [{
+            "cost": ingredient_data.cost,
+            "date": datetime.now(),
+            "vendor": None,
+            "notes": "Updated cost"
+        }]
+        
+        # Add any additional cost entries if provided
+        if hasattr(ingredient_data, 'cost_entries') and ingredient_data.cost_entries:
+            for entry in ingredient_data.cost_entries:
+                cost_entries.append({
+                    "cost": entry.cost,
+                    "date": entry.date,
+                    "vendor": entry.vendor,
+                    "notes": entry.notes
+                })
+        
         db_ingredient = {
             "id": i + 1,
             "name": ingredient_data.name,
             "weight": ingredient_data.weight,
             "nutrition_facts": ingredient_data.nutrition_facts,
-            "cost": ingredient_data.cost,
+            "cost_entries": cost_entries,
             "recipe_id": recipe_id
         }
         db_recipe["ingredients"].append(db_ingredient)

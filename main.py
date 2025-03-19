@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
 
 from routes import recipe_router, ingredient_router
 from routes.recipe import recipes_db, recipe_counter
@@ -8,6 +9,7 @@ from routes.recipe import recipes_db, recipe_counter
 
 def create_example_recipes():
     global recipe_counter
+    now = datetime.now()
     
     # Create example 1: Chocolate Protein Shake
     recipe_counter += 1
@@ -18,14 +20,18 @@ def create_example_recipes():
         "ingredients": []
     }
     
-    # Add ingredients
+    # Add ingredients with cost history
     ingredients = [
         {
             "id": 1,
             "name": "Protein Powder", 
             "weight": 30.0, 
             "nutrition_facts": {"protein": 24, "carbs": 3, "fat": 1, "calories": 120},
-            "cost": 1.20,
+            "cost_entries": [
+                {"cost": 1.00, "date": now - timedelta(days=90), "vendor": "BulkSupplements", "notes": "Initial purchase"},
+                {"cost": 1.10, "date": now - timedelta(days=60), "vendor": "BulkSupplements", "notes": "Price increase"},
+                {"cost": 1.20, "date": now, "vendor": "BulkSupplements", "notes": "Current price"}
+            ],
             "recipe_id": shake_id
         },
         {
@@ -33,7 +39,10 @@ def create_example_recipes():
             "name": "Almond Milk", 
             "weight": 240.0, 
             "nutrition_facts": {"protein": 1, "carbs": 2, "fat": 3, "calories": 40},
-            "cost": 0.50,
+            "cost_entries": [
+                {"cost": 0.45, "date": now - timedelta(days=45), "vendor": "Whole Foods", "notes": "Initial purchase"},
+                {"cost": 0.50, "date": now, "vendor": "Trader Joe's", "notes": "Changed supplier"}
+            ],
             "recipe_id": shake_id
         },
         {
@@ -41,7 +50,10 @@ def create_example_recipes():
             "name": "Banana", 
             "weight": 100.0, 
             "nutrition_facts": {"protein": 1, "carbs": 23, "fat": 0, "calories": 105},
-            "cost": 0.30,
+            "cost_entries": [
+                {"cost": 0.25, "date": now - timedelta(days=30), "vendor": "Local Market", "notes": "Initial purchase"},
+                {"cost": 0.30, "date": now, "vendor": "Local Market", "notes": "Seasonal price increase"}
+            ],
             "recipe_id": shake_id
         },
     ]
@@ -57,14 +69,18 @@ def create_example_recipes():
         "ingredients": []
     }
     
-    # Add ingredients
+    # Add ingredients with cost history
     ingredients = [
         {
             "id": 4,
             "name": "Chicken Breast", 
             "weight": 150.0, 
             "nutrition_facts": {"protein": 45, "carbs": 0, "fat": 5, "calories": 235},
-            "cost": 2.50,
+            "cost_entries": [
+                {"cost": 2.20, "date": now - timedelta(days=60), "vendor": "Costco", "notes": "Bulk purchase"},
+                {"cost": 2.35, "date": now - timedelta(days=30), "vendor": "Costco", "notes": "Slight increase"},
+                {"cost": 2.50, "date": now, "vendor": "Costco", "notes": "Current price"}
+            ],
             "recipe_id": salad_id
         },
         {
@@ -72,7 +88,10 @@ def create_example_recipes():
             "name": "Mixed Greens", 
             "weight": 100.0, 
             "nutrition_facts": {"protein": 2, "carbs": 5, "fat": 0, "calories": 25},
-            "cost": 1.00,
+            "cost_entries": [
+                {"cost": 0.90, "date": now - timedelta(days=45), "vendor": "Sprouts", "notes": "Initial purchase"},
+                {"cost": 1.00, "date": now, "vendor": "Sprouts", "notes": "Organic option"}
+            ],
             "recipe_id": salad_id
         },
         {
@@ -80,7 +99,9 @@ def create_example_recipes():
             "name": "Cherry Tomatoes", 
             "weight": 50.0, 
             "nutrition_facts": {"protein": 1, "carbs": 4, "fat": 0, "calories": 18},
-            "cost": 0.75,
+            "cost_entries": [
+                {"cost": 0.75, "date": now, "vendor": "Farmer's Market", "notes": "Fresh batch"}
+            ],
             "recipe_id": salad_id
         },
         {
@@ -88,7 +109,10 @@ def create_example_recipes():
             "name": "Olive Oil", 
             "weight": 15.0, 
             "nutrition_facts": {"protein": 0, "carbs": 0, "fat": 14, "calories": 120},
-            "cost": 0.30,
+            "cost_entries": [
+                {"cost": 0.25, "date": now - timedelta(days=90), "vendor": "Costco", "notes": "Bulk purchase"},
+                {"cost": 0.30, "date": now, "vendor": "Costco", "notes": "Current price"}
+            ],
             "recipe_id": salad_id
         },
     ]
