@@ -1,13 +1,12 @@
 # Recipe API
 
-A FastAPI backend for managing recipes and ingredients with SQLite database.
+A FastAPI backend for managing recipes and ingredients
 
 ## Features
 
-- Store and manage recipes
+- Store and manage recipes in memory
 - Track ingredients with nutrition facts and costs
 - RESTful API with CRUD operations
-- Async database operations
 
 ## Models
 
@@ -25,12 +24,6 @@ pip install -r requirements.txt
 ```bash
 python main.py
 ```
-
-The API will be available at `http://localhost:8000`. 
-
-API documentation is available at:
-- `http://localhost:8000/docs` (Swagger UI)
-- `http://localhost:8000/redoc` (ReDoc)
 
 ## API Endpoints
 

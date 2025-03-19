@@ -4,7 +4,7 @@ from datetime import datetime
 
 from schemas import RecipeCreate, Recipe as RecipeSchema, Ingredient as IngredientSchema
 
-# In-memory storage
+
 recipes_db: Dict[int, dict] = {}
 recipe_counter = 0
 
@@ -16,17 +16,17 @@ def create_recipe(recipe: RecipeCreate):
     global recipe_counter
     recipe_counter += 1
     
-    # Create new recipe with ID
+
     db_recipe = {
         "id": recipe_counter,
         "name": recipe.name,
         "ingredients": []
     }
     
-    # Add ingredients if provided
+
     if recipe.ingredients:
         for i, ingredient_data in enumerate(recipe.ingredients):
-            # Create cost entries from the ingredient cost
+
             cost_entries = [{
                 "cost": ingredient_data.cost,
                 "date": datetime.now(),
@@ -34,7 +34,7 @@ def create_recipe(recipe: RecipeCreate):
                 "notes": "Initial cost"
             }]
             
-            # Add any additional cost entries if provided
+
             if hasattr(ingredient_data, 'cost_entries') and ingredient_data.cost_entries:
                 for entry in ingredient_data.cost_entries:
                     cost_entries.append({
@@ -54,7 +54,7 @@ def create_recipe(recipe: RecipeCreate):
             }
             db_recipe["ingredients"].append(db_ingredient)
     
-    # Store in our in-memory db
+
     recipes_db[recipe_counter] = db_recipe
     
     return db_recipe
@@ -79,16 +79,16 @@ def update_recipe(recipe_id: int, recipe: RecipeCreate):
     if recipe_id not in recipes_db:
         raise HTTPException(status_code=404, detail="Recipe not found")
     
-    # Update recipe
+
     db_recipe = {
         "id": recipe_id,
         "name": recipe.name,
         "ingredients": []
     }
     
-    # Add new ingredients
+
     for i, ingredient_data in enumerate(recipe.ingredients):
-        # Create cost entries from the ingredient cost
+
         cost_entries = [{
             "cost": ingredient_data.cost,
             "date": datetime.now(),
@@ -96,7 +96,7 @@ def update_recipe(recipe_id: int, recipe: RecipeCreate):
             "notes": "Updated cost"
         }]
         
-        # Add any additional cost entries if provided
+
         if hasattr(ingredient_data, 'cost_entries') and ingredient_data.cost_entries:
             for entry in ingredient_data.cost_entries:
                 cost_entries.append({

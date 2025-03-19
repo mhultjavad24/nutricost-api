@@ -11,6 +11,5 @@ SessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine
 Base = declarative_base()
 
 async def get_db():
-    """Dependency for getting DB session"""
     async with SessionLocal() as session:
         yield session 

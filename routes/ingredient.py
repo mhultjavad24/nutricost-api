@@ -6,7 +6,7 @@ from routes.recipe import recipes_db
 from schemas import IngredientCreate, Ingredient as IngredientSchema
 from schemas.ingredient import CostEntry
 
-# In-memory storage
+
 ingredient_counter = 0
 
 router = APIRouter(prefix="/ingredients", tags=["ingredients"])
@@ -16,15 +16,15 @@ router = APIRouter(prefix="/ingredients", tags=["ingredients"])
 def create_ingredient(recipe_id: int, ingredient: IngredientCreate):
     global ingredient_counter
     
-    # Verify recipe exists
+
     if recipe_id not in recipes_db:
         raise HTTPException(status_code=404, detail="Recipe not found")
     
     ingredient_counter += 1
     
-    # Create cost entries
+
     cost_entries = []
-    # Add the current cost as a cost entry
+
     cost_entries.append({
         "cost": ingredient.cost,
         "date": datetime.now(),
@@ -32,7 +32,7 @@ def create_ingredient(recipe_id: int, ingredient: IngredientCreate):
         "notes": "Initial cost"
     })
     
-    # Add any additional cost entries if provided
+
     if ingredient.cost_entries:
         for entry in ingredient.cost_entries:
             cost_entries.append({
@@ -42,7 +42,7 @@ def create_ingredient(recipe_id: int, ingredient: IngredientCreate):
                 "notes": entry.notes
             })
     
-    # Create ingredient
+
     db_ingredient = {
         "id": ingredient_counter,
         "name": ingredient.name,
@@ -52,7 +52,7 @@ def create_ingredient(recipe_id: int, ingredient: IngredientCreate):
         "recipe_id": recipe_id
     }
     
-    # Add to recipe's ingredients
+
     recipes_db[recipe_id]["ingredients"].append(db_ingredient)
     
     return db_ingredient
@@ -60,7 +60,7 @@ def create_ingredient(recipe_id: int, ingredient: IngredientCreate):
 
 @router.get("/", response_model=List[IngredientSchema])
 def read_ingredients(skip: int = 0, limit: int = 100):
-    # Collect all ingredients from all recipes
+
     all_ingredients = []
     for recipe in recipes_db.values():
         all_ingredients.extend(recipe["ingredients"])
@@ -70,7 +70,7 @@ def read_ingredients(skip: int = 0, limit: int = 100):
 
 @router.get("/{ingredient_id}", response_model=IngredientSchema)
 def read_ingredient(ingredient_id: int):
-    # Find ingredient across all recipes
+
     for recipe in recipes_db.values():
         for ingredient in recipe["ingredients"]:
             if ingredient["id"] == ingredient_id:
@@ -81,14 +81,14 @@ def read_ingredient(ingredient_id: int):
 
 @router.put("/{ingredient_id}", response_model=IngredientSchema)
 def update_ingredient(ingredient_id: int, ingredient: IngredientCreate):
-    # Find ingredient to update
+
     for recipe_id, recipe in recipes_db.items():
         for i, ing in enumerate(recipe["ingredients"]):
             if ing["id"] == ingredient_id:
-                # Get existing cost entries
+
                 cost_entries = ing.get("cost_entries", [])
                 
-                # Add the new cost as an entry if it has changed
+
                 current_cost = ingredient.cost
                 if not cost_entries or current_cost != cost_entries[-1]["cost"]:
                     cost_entries.append({
@@ -98,7 +98,7 @@ def update_ingredient(ingredient_id: int, ingredient: IngredientCreate):
                         "notes": "Updated cost"
                     })
                 
-                # Add any additional cost entries if provided
+
                 if ingredient.cost_entries:
                     for entry in ingredient.cost_entries:
                         cost_entries.append({
@@ -108,7 +108,7 @@ def update_ingredient(ingredient_id: int, ingredient: IngredientCreate):
                             "notes": entry.notes
                         })
                 
-                # Update ingredient
+
                 db_ingredient = {
                     "id": ingredient_id,
                     "name": ingredient.name,
@@ -125,7 +125,7 @@ def update_ingredient(ingredient_id: int, ingredient: IngredientCreate):
 
 @router.delete("/{ingredient_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_ingredient(ingredient_id: int):
-    # Find and delete ingredient
+
     for recipe in recipes_db.values():
         for i, ingredient in enumerate(recipe["ingredients"]):
             if ingredient["id"] == ingredient_id:
@@ -135,14 +135,14 @@ def delete_ingredient(ingredient_id: int):
     raise HTTPException(status_code=404, detail="Ingredient not found")
 
 
-# Add an endpoint to add cost entries to an ingredient
+
 @router.post("/{ingredient_id}/cost", response_model=IngredientSchema)
 def add_cost_entry(ingredient_id: int, cost_entry: CostEntry):
-    # Find ingredient
+
     for recipe in recipes_db.values():
         for i, ingredient in enumerate(recipe["ingredients"]):
             if ingredient["id"] == ingredient_id:
-                # Add new cost entry
+
                 if "cost_entries" not in ingredient:
                     ingredient["cost_entries"] = []
                 
@@ -158,17 +158,17 @@ def add_cost_entry(ingredient_id: int, cost_entry: CostEntry):
     raise HTTPException(status_code=404, detail="Ingredient not found")
 
 
-# Add endpoint to get price history for an ingredient
+
 @router.get("/{ingredient_id}/cost_history", response_model=List[CostEntry])
 def get_cost_history(ingredient_id: int):
-    # Find ingredient
+
     for recipe in recipes_db.values():
         for ingredient in recipe["ingredients"]:
             if ingredient["id"] == ingredient_id:
                 if "cost_entries" not in ingredient:
                     return []
                 
-                # Sort by date, newest first
+
                 sorted_entries = sorted(
                     ingredient["cost_entries"], 
                     key=lambda x: x["date"] if isinstance(x["date"], datetime) else datetime.fromisoformat(x["date"]), 

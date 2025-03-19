@@ -17,7 +17,7 @@ class IngredientBase(BaseModel):
     
 
 class IngredientCreate(IngredientBase):
-    cost: float = Field(ge=0)  # For backward compatibility
+    cost: float = Field(ge=0)
     cost_entries: Optional[List[CostEntry]] = None
     
 
@@ -28,7 +28,7 @@ class Ingredient(IngredientBase):
     
     @property
     def cost(self) -> float:
-        """Return the most recent cost entry's value, or 0 if none exist"""
+    
         if not self.cost_entries:
             return 0.0
         return sorted(self.cost_entries, key=lambda x: x.date, reverse=True)[0].cost

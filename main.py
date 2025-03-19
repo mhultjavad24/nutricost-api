@@ -11,7 +11,6 @@ def create_example_recipes():
     global recipe_counter
     now = datetime.now()
     
-    # Create example 1: Chocolate Protein Shake
     recipe_counter += 1
     shake_id = recipe_counter
     shake = {
@@ -20,7 +19,6 @@ def create_example_recipes():
         "ingredients": []
     }
     
-    # Add ingredients with cost history
     ingredients = [
         {
             "id": 1,
@@ -60,7 +58,6 @@ def create_example_recipes():
     shake["ingredients"] = ingredients
     recipes_db[shake_id] = shake
     
-    # Create example 2: Chicken Salad
     recipe_counter += 1
     salad_id = recipe_counter
     salad = {
@@ -69,7 +66,6 @@ def create_example_recipes():
         "ingredients": []
     }
     
-    # Add ingredients with cost history
     ingredients = [
         {
             "id": 4,
@@ -122,12 +118,10 @@ def create_example_recipes():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create example data on startup
     create_example_recipes()
     
     yield
     
-    # Clean up resources on shutdown (not needed for in-memory)
     pass
 
 
@@ -138,7 +132,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -147,7 +140,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
 app.include_router(recipe_router)
 app.include_router(ingredient_router)
 
