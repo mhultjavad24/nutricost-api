@@ -1,131 +1,41 @@
-from typing import List, Dict
-from fastapi import APIRouter, HTTPException, status
-from datetime import datetime
+from typing import List
+from fastapi import APIRouter, HTTPException, status, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from schemas import RecipeCreate, Recipe as RecipeSchema, Ingredient as IngredientSchema
-
-
-recipes_db: Dict[int, dict] = {}
-recipe_counter = 0
+from schemas import RecipeCreate, Recipe as RecipeSchema
+from database import get_db
+from repositories.recipe_repository import RecipeRepository
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
 
+async def get_recipe_repository(db: AsyncSession = Depends(get_db)) -> RecipeRepository:
+    return RecipeRepository(db)
 
 @router.post("/", response_model=RecipeSchema, status_code=status.HTTP_201_CREATED)
-def create_recipe(recipe: RecipeCreate):
-    global recipe_counter
-    recipe_counter += 1
-    
-
-    db_recipe = {
-        "id": recipe_counter,
-        "name": recipe.name,
-        "ingredients": []
-    }
-    
-
-    if recipe.ingredients:
-        for i, ingredient_data in enumerate(recipe.ingredients):
-
-            cost_entries = [{
-                "cost": ingredient_data.cost,
-                "date": datetime.now(),
-                "vendor": None,
-                "notes": "Initial cost"
-            }]
-            
-
-            if hasattr(ingredient_data, 'cost_entries') and ingredient_data.cost_entries:
-                for entry in ingredient_data.cost_entries:
-                    cost_entries.append({
-                        "cost": entry.cost,
-                        "date": entry.date,
-                        "vendor": entry.vendor,
-                        "notes": entry.notes
-                    })
-            
-            db_ingredient = {
-                "id": i + 1,
-                "name": ingredient_data.name,
-                "weight": ingredient_data.weight,
-                "nutrition_facts": ingredient_data.nutrition_facts,
-                "cost_entries": cost_entries,
-                "recipe_id": recipe_counter
-            }
-            db_recipe["ingredients"].append(db_ingredient)
-    
-
-    recipes_db[recipe_counter] = db_recipe
-    
-    return db_recipe
-
+async def create_recipe(recipe: RecipeCreate, repository: RecipeRepository = Depends(get_recipe_repository)):
+    return await repository.create_recipe(recipe)
 
 @router.get("/", response_model=List[RecipeSchema])
-def read_recipes(skip: int = 0, limit: int = 100):
-    recipes = list(recipes_db.values())
-    return recipes[skip:skip+limit]
-
+async def read_recipes(skip: int = 0, limit: int = 100, repository: RecipeRepository = Depends(get_recipe_repository)):
+    return await repository.get_recipes(skip, limit)
 
 @router.get("/{recipe_id}", response_model=RecipeSchema)
-def read_recipe(recipe_id: int):
-    if recipe_id not in recipes_db:
+async def read_recipe(recipe_id: int, repository: RecipeRepository = Depends(get_recipe_repository)):
+    recipe = await repository.get_recipe(recipe_id)
+    if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
-    
-    return recipes_db[recipe_id]
-
+    return recipe
 
 @router.put("/{recipe_id}", response_model=RecipeSchema)
-def update_recipe(recipe_id: int, recipe: RecipeCreate):
-    if recipe_id not in recipes_db:
+async def update_recipe(recipe_id: int, recipe: RecipeCreate, repository: RecipeRepository = Depends(get_recipe_repository)):
+    updated_recipe = await repository.update_recipe(recipe_id, recipe)
+    if not updated_recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
-    
-
-    db_recipe = {
-        "id": recipe_id,
-        "name": recipe.name,
-        "ingredients": []
-    }
-    
-
-    for i, ingredient_data in enumerate(recipe.ingredients):
-
-        cost_entries = [{
-            "cost": ingredient_data.cost,
-            "date": datetime.now(),
-            "vendor": None,
-            "notes": "Updated cost"
-        }]
-        
-
-        if hasattr(ingredient_data, 'cost_entries') and ingredient_data.cost_entries:
-            for entry in ingredient_data.cost_entries:
-                cost_entries.append({
-                    "cost": entry.cost,
-                    "date": entry.date,
-                    "vendor": entry.vendor,
-                    "notes": entry.notes
-                })
-        
-        db_ingredient = {
-            "id": i + 1,
-            "name": ingredient_data.name,
-            "weight": ingredient_data.weight,
-            "nutrition_facts": ingredient_data.nutrition_facts,
-            "cost_entries": cost_entries,
-            "recipe_id": recipe_id
-        }
-        db_recipe["ingredients"].append(db_ingredient)
-    
-    recipes_db[recipe_id] = db_recipe
-    
-    return db_recipe
-
+    return updated_recipe
 
 @router.delete("/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_recipe(recipe_id: int):
-    if recipe_id not in recipes_db:
+async def delete_recipe(recipe_id: int, repository: RecipeRepository = Depends(get_recipe_repository)):
+    success = await repository.delete_recipe(recipe_id)
+    if not success:
         raise HTTPException(status_code=404, detail="Recipe not found")
-    
-    del recipes_db[recipe_id]
-    
     return None 

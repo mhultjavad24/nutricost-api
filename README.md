@@ -1,6 +1,6 @@
-# Recipe API
+# Nutricost API
 
-A FastAPI backend for managing recipes and ingredients
+A python backend for managing recipes and ingredients
 
 ## Features
 
