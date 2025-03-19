@@ -4,11 +4,10 @@ A Python backend for managing recipes and ingredients with cost tracking
 
 ## Features
 
-- Store and manage recipes in SQLite database
+- Store and manage recipes in memory (SQLlite support to be added)
 - Track ingredients with nutrition facts and cost history
 - RESTful API with CRUD operations
-- Cost tracking with vendor information and notes
-- Async database operations with SQLAlchemy
+- Cost tracking with vendor information and purchases notes
 
 ## Models
 
