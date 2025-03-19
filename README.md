@@ -1,28 +1,51 @@
-# Nutricost API
+# Recipe API
 
-A Python API for accessing Nutricost product information.
+A FastAPI backend for managing recipes and ingredients with SQLite database.
 
-## Overview
+## Features
 
-This project provides a programmatic interface to query and retrieve data about Nutricost nutritional products.
+- Store and manage recipes
+- Track ingredients with nutrition facts and costs
+- RESTful API with CRUD operations
+- Async database operations
+
+## Models
+
+- **Recipe**: Contains recipe name and associated ingredients
+- **Ingredient**: Contains name, weight, nutrition facts, and cost information
 
 ## Setup
 
-1. Clone the repository
-2. Create a virtual environment: `python -m venv .venv`
-3. Activate the virtual environment:
-   - Windows: `.venv\Scripts\activate`
-   - Mac/Linux: `source .venv/bin/activate`
-4. Install dependencies: `pip install -r requirements.txt`
-
-## Usage
-
-Run the application with:
-
-```
-python app.py
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
 ```
 
-## License
+2. Run the application:
+```bash
+python main.py
+```
 
-MIT 
+The API will be available at `http://localhost:8000`. 
+
+API documentation is available at:
+- `http://localhost:8000/docs` (Swagger UI)
+- `http://localhost:8000/redoc` (ReDoc)
+
+## API Endpoints
+
+### Recipes
+
+- `GET /recipes` - List all recipes
+- `GET /recipes/{recipe_id}` - Get a specific recipe
+- `POST /recipes` - Create a new recipe
+- `PUT /recipes/{recipe_id}` - Update a recipe
+- `DELETE /recipes/{recipe_id}` - Delete a recipe
+
+### Ingredients
+
+- `GET /ingredients` - List all ingredients
+- `GET /ingredients/{ingredient_id}` - Get a specific ingredient
+- `POST /ingredients/{recipe_id}` - Add an ingredient to a recipe
+- `PUT /ingredients/{ingredient_id}` - Update an ingredient
+- `DELETE /ingredients/{ingredient_id}` - Delete an ingredient 
