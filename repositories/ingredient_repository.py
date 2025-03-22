@@ -1,11 +1,11 @@
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, insert
 from sqlalchemy.orm import joinedload
 
-from models.ingredient import Ingredient, CostEntry
+from models.ingredient import Ingredient, CostEntry, ingredient_nutrients, Nutrient
 from models.recipe import Recipe
-from schemas import IngredientCreate, Ingredient as IngredientSchema
+from schemas.ingredient import IngredientCreate, Ingredient as IngredientSchema, IngredientNutrient
 from schemas.ingredient import CostEntry as CostEntrySchema
 from datetime import datetime
 
@@ -21,7 +21,6 @@ class IngredientRepository:
         db_ingredient = Ingredient(
             name=ingredient.name,
             weight=ingredient.weight,
-            nutrition_facts=ingredient.nutrition_facts,
             recipe_id=recipe_id
         )
         self.session.add(db_ingredient)
@@ -46,17 +45,41 @@ class IngredientRepository:
                 )
                 self.session.add(cost_entry)
 
+        # Add nutrient relationships
+        for nutrient_data in ingredient.nutrients:
+            stmt = insert(ingredient_nutrients).values(
+                ingredient_id=db_ingredient.id,
+                nutrient_id=nutrient_data.nutrient.id,
+                amount=nutrient_data.amount
+            )
+            await self.session.execute(stmt)
+
         await self.session.commit()
         await self.session.refresh(db_ingredient)
         return db_ingredient
 
     async def get_ingredients(self, skip: int = 0, limit: int = 100) -> List[Ingredient]:
-        query = select(Ingredient).options(joinedload(Ingredient.cost_entries)).offset(skip).limit(limit)
+        query = (
+            select(Ingredient)
+            .options(
+                joinedload(Ingredient.cost_entries),
+                joinedload(Ingredient.nutrients)
+            )
+            .offset(skip)
+            .limit(limit)
+        )
         result = await self.session.execute(query)
         return list(result.scalars().unique())
 
     async def get_ingredient(self, ingredient_id: int) -> Optional[Ingredient]:
-        query = select(Ingredient).where(Ingredient.id == ingredient_id).options(joinedload(Ingredient.cost_entries))
+        query = (
+            select(Ingredient)
+            .where(Ingredient.id == ingredient_id)
+            .options(
+                joinedload(Ingredient.cost_entries),
+                joinedload(Ingredient.nutrients)
+            )
+        )
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
@@ -67,8 +90,8 @@ class IngredientRepository:
 
         db_ingredient.name = ingredient.name
         db_ingredient.weight = ingredient.weight
-        db_ingredient.nutrition_facts = ingredient.nutrition_facts
 
+        # Update cost entries
         cost_entry = CostEntry(
             cost=ingredient.cost,
             date=datetime.now(),
@@ -87,6 +110,23 @@ class IngredientRepository:
                     ingredient_id=db_ingredient.id
                 )
                 self.session.add(cost_entry)
+
+        # Update nutrient relationships
+        # First, remove existing relationships
+        await self.session.execute(
+            ingredient_nutrients.delete().where(
+                ingredient_nutrients.c.ingredient_id == ingredient_id
+            )
+        )
+        
+        # Add new nutrient relationships
+        for nutrient_data in ingredient.nutrients:
+            stmt = insert(ingredient_nutrients).values(
+                ingredient_id=db_ingredient.id,
+                nutrient_id=nutrient_data.nutrient.id,
+                amount=nutrient_data.amount
+            )
+            await self.session.execute(stmt)
 
         await self.session.commit()
         await self.session.refresh(db_ingredient)
@@ -122,4 +162,4 @@ class IngredientRepository:
         db_ingredient = await self.get_ingredient(ingredient_id)
         if not db_ingredient:
             return []
-        return sorted(db_ingredient.cost_entries, key=lambda x: x.date, reverse=True) 
+        return sorted(db_ingredient.cost_entries, key=lambda x: x.date, reverse=True)

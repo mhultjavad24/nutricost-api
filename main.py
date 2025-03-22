@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from routes import recipe_router, ingredient_router
+from routes import recipe_router, ingredient_router, nutrient_router
 from database import engine, Base
 
 @asynccontextmanager
@@ -29,6 +29,7 @@ app.add_middleware(
 
 app.include_router(recipe_router)
 app.include_router(ingredient_router)
+app.include_router(nutrient_router)
 
 @app.get("/")
 async def root():
@@ -36,4 +37,4 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True) 
+    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
